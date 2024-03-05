@@ -1,0 +1,35 @@
+name: Build
+
+env:
+  APKTOOL_VER: 2.9.3
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'adopt-hotspot'
+        java-version: '8'
+
+    - uses: robinraju/release-downloader@v1.9
+      with:
+        repository: 'iBotPeaches/Apktool'
+        tag: 'v${{ env.APKTOOL_VER }}'
+        fileName: 'apktool_${{ env.APKTOOL_VER }}.jar'
+
+    - name: Build ImsService
+      run: |
+        java -jar apktool_${{ env.APKTOOL_VER }}.jar b .
+        sha1sum dist/* | sed 's|dist/||g' | tee dist/sha1.txt
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: APK
+        path: dist
